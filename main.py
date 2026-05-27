@@ -128,9 +128,23 @@ with sheet_col:
             mod = (score - 10) // 2
             return f"+{mod}" if mod >= 0 else f"{mod}"
 
-        # Traditional print action button using native web options
-        if st.button("🖨️ Open Browser Print Menu"):
-            st.js_code("window.print();")
+        # Traditional print action button using a tiny HTML/JS component
+        st.write("🖨️ Need a physical copy?")
+        st.components.v1.html(
+            """
+            <button onclick="window.print()" style="
+                background-color: #FF4B4B; 
+                color: white; 
+                border: none; 
+                padding: 8px 16px; 
+                border-radius: 4px; 
+                cursor: pointer;
+                font-weight: bold;">
+                Print Character Sheet
+            </button>
+            """,
+            height=50,
+        )
             
         # Refactored Markdown string block to prevent breaking the grid compiler
         st.markdown(f"""
@@ -163,6 +177,4 @@ with sheet_col:
 
 ---
 *Generated via Ultimate RPG Character Forge*
-
-
-
+""")
