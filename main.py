@@ -1,4 +1,4 @@
-  import streamlit as st
+import streamlit as st
 import random
 import base64
 from io import BytesIO
