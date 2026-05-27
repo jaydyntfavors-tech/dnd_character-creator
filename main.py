@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as str
 import random
 from google import genai
 from google.genai import types
@@ -189,5 +189,3 @@ with sheet_col:
             with st.expander("Read Origin Backstory", expanded=True):
                 st.markdown(st.session_state.generated_backstory)
 
-            with st.expander("Expand Backstory Lore", expanded=True):
-                st.markdown(st.session_state.generated_backstory)
