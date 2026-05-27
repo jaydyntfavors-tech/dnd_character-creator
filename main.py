@@ -4,13 +4,12 @@ from google import genai
 from google.genai import types
 
 # --- 1. App Layout Configuration ---
-st.set_page_config(page_title="Ultimate Character Forge", page_icon="⚔️", layout="wide")
+st.set_page_config(page_title="RPG Lore Forge & Sheet Creator", page_icon="📜", layout="wide")
 
-st.title("⚔️ The Ultimate RPG Character Forge")
-st.subheader("Craft your hero's soul, stats, and a custom anime visual, forged by AI.")
+st.title("📜 The RPG Character Forge & Sheet Creator")
+st.subheader("Assign stats, describe your traits, and generate an epic backstory with a printable character sheet.")
 
 # --- 2. Pull API Key Securely from Streamlit Secrets ---
-# Ensure you have GEMINI_API_KEY saved in your Streamlit App Dashboard Settings!
 try:
     google_api_key = st.secrets["GEMINI_API_KEY"]
 except KeyError:
@@ -25,27 +24,25 @@ if st.sidebar.button("Roll Sidebar Die"):
     roll = random.randint(1, sides)
     st.sidebar.success(f"Rolled a {dice_type}: **{roll}**")
 
-# --- 4. Main Layout: Two Large Working Columns ---
-input_col, sheet_col = st.columns([1.2, 1.8])
+# --- 4. Main Layout: Two Working Columns ---
+input_col, sheet_col = st.columns([1, 1.2])
 
-# Maintain persistence for generated content across button clicks
+# Keep the data saved on screen between interactions
 if 'generated_backstory' not in st.session_state:
     st.session_state.generated_backstory = None
-if 'generated_image_obj' not in st.session_state:
-    st.session_state.generated_image_obj = None
 
 with input_col:
-    st.header("👤 Character Details")
-    char_name = st.text_input("Character Name", placeholder="e.g., Elara Sunweaver")
-    char_race = st.selectbox("Race", ["Human", "High Elf", "Dwarf", "Halfling", "Orc", "Tiefling", "Dragonborn"])
-    char_class = st.selectbox("Class", ["Paladin", "Wizard", "Rogue", "Cleric", "Fighter", "Ranger", "Monk"])
+    st.header("👤 Character Identity")
+    char_name = st.text_input("Character Name", placeholder="e.g., Lyra Swiftwind")
+    char_race = st.selectbox("Race / Ancestry", ["Human", "Elf", "Dwarf", "Halfling", "Orc", "Tiefling", "Dragonborn"])
+    char_class = st.selectbox("Class", ["Fighter", "Wizard", "Rogue", "Cleric", "Paladin", "Ranger", "Barbarian", "Bard", "Monk"])
+    char_alignment = st.selectbox("Alignment", ["Lawful Good", "Neutral Good", "Chaotic Good", "Lawful Neutral", "True Neutral", "Chaotic Neutral", "Lawful Evil", "Neutral Evil", "Chaotic Evil"])
     
     st.markdown("---")
-    st.header("🎨 Physical Description & Visual Keynotes")
-    st.write("Describe your character's physical traits. The AI will cross-reference this description with your backstory details.")
+    st.header("🎨 Appearance & Equipment Notes")
     user_visual_desc = st.text_area(
-        "Character Appearance", 
-        placeholder="e.g., A warrior with short silver hair, serious gold eyes, wearing worn dark iron plate armor, holding a broken claymore."
+        "Describe your appearance, key gear, or distinct features:", 
+        placeholder="e.g., Emerald green eyes, cloaked in a tattered midnight-blue velvet cape, carries twin silver daggers and an old leather-bound journal."
     )
     
     st.markdown("---")
@@ -78,89 +75,112 @@ with input_col:
         elif d20_roll == 1: 
             st.error("CRITICAL FAILURE! 💀")
 
-# --- 5. Background Engine Context Compiler ---
-def synthesize_image_prompt(client, base_desc, story_text):
-    """Uses Gemini 2.5 Flash to synthesize the user's explicit physical choices with narrative lore details."""
-    context_instruction = (
-        "You are an expert visual prompt engineer for an image generation AI model. "
-        "Your task is to merge the user's physical character description with core themes, "
-        "mood, and dynamic elements extracted from their backstory text. "
-        "Focus on creating a unified, atmospheric artistic description. "
-        "CRITICAL REQUIREMENT: The final output must enforce a modern, high-quality anime illustration style."
-    )
-    
-    prompt_to_distill = (
-        f"User Appearance Request: '{base_desc}'\n"
-        f"Backstory Context: '{story_text}'"
-    )
-    
-    response = client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents=prompt_to_distill,
-        config=types.GenerateContentConfig(system_instruction=context_instruction)
-    )
-    return response.text.strip()
-
-# --- 6. Execution & Portfolio Display ---
+# --- 5. Backstory Generator & Sheet Rendering Engine ---
 with sheet_col:
-    if st.button("✨ Complete Character Creation (Lore, Stats, and Custom Anime Visual)"):
+    st.header("✨ The Grand Chronicle")
+    if st.button("📜 Forge Character & Backstory"):
         if not char_name:
-            st.warning("Your hero needs a name before their destiny can be forged!")
+            st.warning("Your hero needs a name before their legend can be written!")
             st.stop()
             
-        if not user_visual_desc:
-            st.warning("Please provide a physical appearance description to help the image generator.")
-            st.stop()
-            
-        with st.spinner("Weaving lore, aligning stars, and rendering your anime character portal..."):
+        with st.spinner("Consulting the ancient archives..."):
             try:
-                # Initialize unified Gemini client
+                # Initialize standard Gemini client
                 client = genai.Client(api_key=google_api_key)
                 
-                # Step A: Generate Backstory Narrative
                 system_instruction = (
-                    "You are an expert fantasy author and RPG Game Master. "
-                    "Write an epic, cohesive 3-paragraph character origin story "
-                    "based on the name, race, class, and statistics provided. "
-                    "Ensure high stats translate to achievements and low stats reveal clear physical or developmental traits."
+                    "You are an expert fantasy novelist and experienced tabletop RPG Game Master. "
+                    "Write a highly engaging, deep, 4-paragraph character origin story based on the details provided. "
+                    "Paragraph 1: Early life and childhood, incorporating their race/ancestry environment.\n"
+                    "Paragraph 2: How they became their chosen Class and how their highest ability scores helped them.\n"
+                    "Paragraph 3: A turning point, trial, or tragedy that explains their physical appearance, clothing choices, or distinct traits.\n"
+                    "Paragraph 4: Their current motivation for setting out into the world on a dangerous campaign adventure.\n"
+                    "Make sure high stats reflect outstanding feats, and low stats reflect real struggles or weaknesses."
                 )
                 
-                character_data_packet = (
-                    f"Name: {char_name}\nRace: {char_race}\nClass: {char_class}\n"
-                    f"Attributes: STR {str_score}, DEX {dex_score}, CON {con_score}, "
-                    f"INT {int_score}, WIS {wis_score}, CHA {cha_score}"
+                character_data = (
+                    f"Name: {char_name}\n"
+                    f"Race: {char_race}\n"
+                    f"Class: {char_class}\n"
+                    f"Alignment: {char_alignment}\n"
+                    f"Physical Details: {user_visual_desc if user_visual_desc else 'Standard appearance'}\n"
+                    f"Stats: STR {str_score}, DEX {dex_score}, CON {con_score}, INT {int_score}, WIS {wis_score}, CHA {cha_score}"
                 )
                 
-                backstory_response = client.models.generate_content(
+                response = client.models.generate_content(
                     model='gemini-2.5-flash',
-                    contents=character_data_packet,
+                    contents=character_data,
                     config=types.GenerateContentConfig(system_instruction=system_instruction)
                 )
-                st.session_state.generated_backstory = backstory_response.text
-
-                # Step B: Synthesize Custom Visual Prompt
-                mega_prompt = synthesize_image_prompt(client, user_visual_desc, st.session_state.generated_backstory)
-
-                # Step C: Generate Anime Artwork using Imagen 3 via unified client
-                image_response = client.models.generate_images(
-                    model='imagen-3.0-generate-002',
-                    prompt=mega_prompt,
-                    config=types.GenerateImagesConfig(
-                        number_of_images=1,
-                        aspect_ratio="1:1",
-                        output_mime_type="image/png"
-                    )
-                )
                 
-                # Extract the PIL image directly out of response wrappers
-                st.session_state.generated_image_obj = image_response.generated_images[0].image
-                st.success(f"Character Generation Complete! Meet {char_name}.")
+                st.session_state.generated_backstory = response.text
+                st.success(f"The profile for {char_name} has been fully forged!")
 
             except Exception as e:
-                st.error(f"The magic spell backfired: {e}")
+                st.error(f"The chronicle spell failed: {e}")
 
-    # Display Rendered Character Sheet Screen if data exists
-    if st.session_state.generated_backstory and st.session_state.generated_image_obj:
-        st.header(f"📜 Character Record Portfolio: {char_name}")
+    # --- Display Printable Character Sheet Section ---
+    if st.session_state.generated_backstory:
+        st.markdown("---")
+        
+        # Calculate modifiers to print directly on the sheet
+        def get_mod(score):
+            mod = (score - 10) // 2
+            return f"+{mod}" if mod >= 0 else f"{mod}"
+
+        # Inject JavaScript/HTML to trigger a direct browser print function focusing on the sheet area
+        st.markdown(
+            """
+            <style>
+            @media print {
+                /* Hide everything except the designated print area */
+                body * { visibility: hidden; }
+                .printable-sheet, .printable-sheet * { visibility: visible; }
+                .printable-sheet { position: absolute; left: 0; top: 0; width: 100%; }
+            }
+            </style>
+            """, 
+            unsafe_allow_html=True
+        )
+        
+        # Streamlit browser print button trigger
+        if st.button("🖨️ Open Browser Print Menu"):
+            st.js_code("window.print();")
+            
+        # Wrap the character sheet in an identifiable HTML div class for the printer CSS to recognize
+        st.markdown('<div class="printable-sheet">', unsafe_allow_html=True)
+        
+        # The Formal Tabletop Sheet Layout
+        st.markdown(f"""
+        # 🛡️ CHARACTER LOG RECORD
+        **NAME:** {char_name} | **RACE:** {char_race} | **CLASS:** {char_class} | **ALIGNMENT:** {char_alignment}
+        
+        ---
+        
+        ### 📊 PRIMARY ATTRIBUTE SCORES
+        | Attribute | Core Score | Modifier |
+        | :--- | :---: | :---: |
+        | 💪 **STRENGTH (STR)** | {str_score} | {get_mod(str_score)} |
+        | 🏃‍♂️ **DEXTERITY (DEX)** | {dex_score} | {get_mod(dex_score)} |
+        | 🛡️ **CONSTITUTION (CON)** | {con_score} | {get_mod(con_score)} |
+        | 🧠 **INTELLIGENCE (INT)** | {int_score} | {get_mod(int_score)} |
+        | 🦉 **WISDOM (WIS)** | {wis_score} | {get_mod(wis_score)} |
+        | ✨ **CHARISMA (CHA)** | {cha_score} | {get_mod(cha_score)} |
+        
+        ---
+        
+        ### 📝 VISUAL DESCRIPTION & INVENTORY NOTES
+        *{user_visual_desc if user_visual_desc else 'No distinct appearance notes provided.'}*
+        
+        ---
+        
+        ### 📖 CHRONICLES OF ORIGIN (BACKSTORY)
+        {st.session_state.generated_backstory}
+        
+        ---
+        *Generated via Ultimate RPG Character Forge*
+        """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
