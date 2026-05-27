@@ -15,16 +15,6 @@ st.title("⚔️ The Ultimate RPG Character Forge")
 st.subheader("Craft your hero's soul, stats, and a custom anime visual, forged by AI.")
 
 
-# --- Sidebar: API Configuration & Quick Roller ---
-st.sidebar.header("⚙️ Configuration")
-# We require two keys now: Vertex AI authentication and a general Gemini API key.
-# For simplicity in this demo, we'll ask for two inputs, but in production,
-# Vertex AI often uses environment-based service accounts.
-google_api_key = st.sidebar.text_input("Gemini API Key:", type="password")
-project_id = st.sidebar.text_input("GCP Project ID (for Vertex AI):")
-location = st.sidebar.text_input("Vertex AI Location:", value="us-central1") # Standard
-
-
 st.sidebar.markdown("---")
 st.sidebar.header("🎲 Quick Dice Roller")
 dice_type = st.sidebar.selectbox("Choose a Die", ["d4", "d6", "d8", "d10", "d12", "d20", "d100"])
