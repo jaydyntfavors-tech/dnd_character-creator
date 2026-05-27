@@ -162,30 +162,5 @@ with sheet_col:
     # Display Rendered Character Sheet Screen if data exists
     if st.session_state.generated_backstory and st.session_state.generated_image_obj:
         st.header(f"📜 Character Record Portfolio: {char_name}")
-        st.markdown("---")
-        
-        final_sheet_col1, final_sheet_col2 = st.columns([1, 1.2])
-        
-        with final_sheet_col1:
-            st.subheader("🛡️ Attributes & Visual Frame")
-            
-            # Print a neat dataframe tracking baseline metrics
-            stat_summary = {
-                "STR": str_score, "DEX": dex_score, "CON": con_score,
-                "INT": int_score, "WIS": wis_score, "CHA": cha_score
-            }
-            st.dataframe(
-                data={stat: [score, f"({(score - 10) // 2: +d})"] for stat, score in stat_summary.items()},
-                columns=["Score", "Modifier"],
-                width=300,
-                hide_index=True
-            )
-            
-            # Directly pass PIL image wrapper straight into st.image
-            st.image(st.session_state.generated_image_obj, caption=f"Anime Avatar - {char_name} ({char_race} {char_class})", use_container_width=True)
-            
-        with final_sheet_col2:
-            st.subheader("📖 Chronicles of Destiny")
-            with st.expander("Read Origin Backstory", expanded=True):
-                st.markdown(st.session_state.generated_backstory)
+
 
